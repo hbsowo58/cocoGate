@@ -57,7 +57,7 @@ const Chatbot = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ message: inputMessage })
+        body: JSON.stringify({ message: inputMessage, history: messages })
       });
 
       if (!response.ok) {

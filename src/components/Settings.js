@@ -1,28 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Settings.css';
+import { useApiKey } from '../contexts/ApiKeyContext';
 
 const Settings = () => {
-  const [apiKey, setApiKey] = useState('');
+  const { apiKey, setApiKey } = useApiKey();
+  const [inputKey, setInputKey] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 로그인 상태 확인
+    // 로그인 상태 확인 및 API 키 불러오기
     const token = localStorage.getItem('jwt_token');
     if (!token) {
       setError('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
       setTimeout(() => navigate('/signin'), 2000);
       return;
     }
-  }, [navigate]);
+    // 서버에서 API 키 불러오기
+    fetch(`${process.env.REACT_APP_API_URL}/api/user/api-key`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.apiKey) {
+          setApiKey(data.apiKey);
+          setInputKey(data.apiKey);
+          if (window.confirm('키가 이미 존재합니다. 챗봇 페이지로 이동하시겠습니까?')) {
+            navigate('/chatbot');
+          }
+        }
+      });
+  }, [navigate, setApiKey]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     // API 키 형식 검증
-    if (!apiKey.startsWith('sk-')) {
+    if (!inputKey.startsWith('sk-')) {
       setError('올바른 OpenAI API 키 형식이 아닙니다. "sk-"로 시작하는 API 키를 입력해주세요.');
       return;
     }
@@ -40,7 +59,7 @@ const Settings = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ apiKey })
+        body: JSON.stringify({ apiKey: inputKey })
       });
 
       const data = await response.json();
@@ -50,7 +69,8 @@ const Settings = () => {
       }
 
       // 로컬 스토리지에 저장
-      localStorage.setItem('openai_api_key', apiKey);
+      // localStorage.setItem('openai_api_key', apiKey); // 제거
+      setApiKey(inputKey);
       alert(data.message || 'API 키가 성공적으로 저장되었습니다.');
       navigate('/chatbot');
     } catch (error) {
@@ -76,8 +96,8 @@ const Settings = () => {
             <input
               type="password"
               id="apiKey"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              value={inputKey}
+              onChange={(e) => setInputKey(e.target.value)}
               placeholder="sk-..."
               required
             />

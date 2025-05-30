@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Chatbot.css';
+import { useApiKey } from '../contexts/ApiKeyContext';
 
 const Chatbot = () => {
+  const { apiKey } = useApiKey();
   const [messages, setMessages] = useState([
     {
       type: 'bot',
@@ -14,21 +16,18 @@ const Chatbot = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 로그인 상태 확인
     const token = localStorage.getItem('jwt_token');
     if (!token) {
       alert('로그인이 필요합니다.');
       navigate('/signin');
       return;
     }
-    // API 키 확인
-    const apiKey = localStorage.getItem('openai_api_key');
     if (!apiKey) {
       alert('API 키를 먼저 입력해주세요.');
       navigate('/settings');
       return;
     }
-  }, [navigate]);
+  }, [navigate, apiKey]);
 
   const handleBack = () => {
     navigate(-1);

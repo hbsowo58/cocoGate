@@ -35,6 +35,21 @@ const Login = ({ setIsLoggedIn }) => {
       localStorage.setItem('username', data.username);
       
       setIsLoggedIn(true);
+      // 로그인 후 API 키 받아오기
+      try {
+        const keyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/user/api-key`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${data.token}`
+          }
+        });
+        if (keyRes.ok) {
+          const keyData = await keyRes.json();
+          console.log('로그인 후 받아온 keyData:', keyData);
+          // localStorage.setItem('openai_api_key', keyData.apiKey); // 제거 또는 주석처리
+          // 필요하다면 상태로 올려서 관리
+        }
+      } catch (e) { /* 무시 */ }
       navigate('/settings');
     } catch (error) {
       console.error('Login error:', error);

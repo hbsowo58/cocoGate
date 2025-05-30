@@ -45,7 +45,6 @@ const Login = ({ setIsLoggedIn }) => {
         });
         if (keyRes.ok) {
           const keyData = await keyRes.json();
-          console.log('로그인 후 받아온 keyData:', keyData);
           // localStorage.setItem('openai_api_key', keyData.apiKey); // 제거 또는 주석처리
           // 필요하다면 상태로 올려서 관리
         }

@@ -21,6 +21,13 @@ const Chatbot = () => {
       navigate('/signin');
       return;
     }
+    // API 키 확인
+    const apiKey = localStorage.getItem('openai_api_key');
+    if (!apiKey) {
+      alert('API 키를 먼저 입력해주세요.');
+      navigate('/settings');
+      return;
+    }
   }, [navigate]);
 
   const handleBack = () => {
@@ -97,7 +104,7 @@ const Chatbot = () => {
     <div className="chatbot-container">
       <div className="chatbot-header">
         <button onClick={handleBack} className="back-button">←</button>
-        <h2>우리카드 챗봇</h2>
+        <h2>챗봇</h2>
         <button className="refresh-button" onClick={() => window.location.reload()}>↻</button>
       </div>
 
@@ -125,11 +132,11 @@ const Chatbot = () => {
       </div>
 
       <div className="quick-actions">
-        <button onClick={() => handleQuickAction("즉시결제는 어떻게 하나요?")}>즉시결제</button>
-        <button onClick={() => handleQuickAction("카드 재발급 절차를 알려주세요")}>카드 재발급</button>
-        <button onClick={() => handleQuickAction("이용내역을 확인하고 싶습니다")}>이용내역</button>
-        <button onClick={() => handleQuickAction("실적조회는 어떻게 하나요?")}>실적조회</button>
-        <button onClick={() => handleQuickAction("이용대금 명세서 확인 방법")}>이용대금 명세서</button>
+        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문1</button>
+        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문2</button>
+        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문3</button>
+        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문4</button>
+        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문5</button>
       </div>
 
       <form onSubmit={handleSend} className="input-container">

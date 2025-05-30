@@ -35,7 +35,7 @@ const Login = ({ setIsLoggedIn }) => {
       localStorage.setItem('username', data.username);
       
       setIsLoggedIn(true);
-      navigate('/chatbot');
+      navigate('/settings');
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || '로그인 중 오류가 발생했습니다.');

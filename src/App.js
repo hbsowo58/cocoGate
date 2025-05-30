@@ -42,7 +42,10 @@ function App() {
                 <a href="/signup" className="cocogate-header-btn">회원가입</a>
               </>
             ) : (
-              <button className="cocogate-header-btn" onClick={handleLogout}>로그아웃</button>
+              <>
+                <a href="/settings" className="cocogate-header-btn">설정</a>
+                <button className="cocogate-header-btn" onClick={handleLogout}>로그아웃</button>
+              </>
             )}
           </div>
         </header>
@@ -52,6 +55,9 @@ function App() {
             <ul>
               <li><span role="img" aria-label="채팅">💬</span> 채팅</li>
               <li><span role="img" aria-label="도구">🛠️</span> 도구</li>
+              {isLoggedIn && (
+                <li><a href="/settings" style={{color:'#3b82f6',textDecoration:'none'}}><span role="img" aria-label="설정">⚙️</span> 설정</a></li>
+              )}
               {/* <li><span role="img" aria-label="혜택">🎁</span> 혜택</li> */}
               {/* <li><span role="img" aria-label="저장됨">📄</span> 저장됨</li> */}
             </ul>

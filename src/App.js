@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './components/Home';
 import Login from './pages/Login';
@@ -8,12 +8,21 @@ import Settings from './components/Settings';
 import './App.css';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('jwt_token'));
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    // localStorage에 토큰이 있으면 로그인 상태로 유지
+    setIsLoggedIn(!!localStorage.getItem('jwt_token'));
+  }, []);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    // 로그아웃 처리 로직 추가
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('username');
+    localStorage.removeItem('openai_api_key');
+    // 필요하다면 navigate('/') 등으로 이동
   };
 
   // 보호된 라우트 컴포넌트
@@ -34,7 +43,7 @@ function App() {
             <span className="cocogate-hamburger-bar"></span>
             <span className="cocogate-hamburger-bar"></span>
           </button>
-          <div className="cocogate-logo">cocoGate</div>
+          <a href="/" className="cocogate-logo" style={{textDecoration:'none', color:'#3b82f6'}}>cocoGate</a>
           <div className="cocogate-header-actions">
             {!isLoggedIn ? (
               <>
@@ -53,7 +62,7 @@ function App() {
         {sidebarOpen && (
           <nav className="cocogate-sidebar">
             <ul>
-              <li><span role="img" aria-label="채팅">💬</span> 채팅</li>
+              <li><a href="/chatbot" style={{color:'#6b7280',textDecoration:'none'}}><span role="img" aria-label="채팅">💬</span> 채팅</a></li>
               <li><span role="img" aria-label="도구">🛠️</span> 도구</li>
               {isLoggedIn && (
                 <li><a href="/settings" style={{color:'#3b82f6',textDecoration:'none'}}><span role="img" aria-label="설정">⚙️</span> 설정</a></li>

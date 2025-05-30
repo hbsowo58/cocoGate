@@ -4,58 +4,135 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f7fa;
+body, html, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans KR', 'Roboto', Arial, sans-serif;
+  background: linear-gradient(135deg, #f7f8fa 0%, #e9ecef 100%);
 }
 
-.app {
-  min-height: 100vh;
+.cocogate-app-layout {
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
-button {
-  font-family: inherit;
+.cocogate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  position: relative;
+  z-index: 10;
+}
+.cocogate-logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #3b82f6;
+  letter-spacing: 2px;
+}
+.cocogate-header-actions {
+  display: flex;
+  gap: 12px;
+}
+.cocogate-header-btn {
+  background: #f7f8fa;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 1rem;
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.cocogate-header-btn:hover {
+  background: #3b82f6;
+  color: #fff;
+}
+.cocogate-hamburger {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  margin-right: 16px;
+}
+.cocogate-hamburger-bar {
+  width: 24px;
+  height: 3px;
+  background: #3b82f6;
+  border-radius: 2px;
 }
 
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.cocogate-sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 80px;
+  height: calc(100vh - 60px);
+  background: linear-gradient(180deg, #f7f8fa 0%, #e9ecef 100%);
+  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding-top: 32px;
+  z-index: 5;
+}
+.cocogate-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.cocogate-sidebar li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  font-size: 1.1rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.cocogate-sidebar li:hover {
+  color: #3b82f6;
 }
 
-.App-link {
-  color: #61dafb;
+.cocogate-main {
+  flex: 1;
+  margin-left: 80px;
+  padding: 40px 0 0 0;
+  background: transparent;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+@media (max-width: 900px) {
+  .cocogate-sidebar {
+    width: 56px;
+    padding-top: 16px;
   }
-  to {
-    transform: rotate(360deg);
+  .cocogate-main {
+    margin-left: 56px;
+  }
+  .cocogate-logo {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .cocogate-header {
+    padding: 0 8px;
+  }
+  .cocogate-main {
+    padding: 16px 0 0 0;
   }
 }

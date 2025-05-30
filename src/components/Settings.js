@@ -4,7 +4,7 @@ import './Settings.css';
 import { useApiKey } from '../contexts/ApiKeyContext';
 
 const Settings = () => {
-  const { apiKey, setApiKey } = useApiKey();
+  const { setApiKey } = useApiKey();
   const [inputKey, setInputKey] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();

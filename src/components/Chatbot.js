@@ -8,7 +8,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState([
     {
       type: 'bot',
-      content: '안녕하세요, 고객님\n아껌없이 도와 드릴게요!'
+      content: '안녕하세요! 무엇을 도와드릴까요?'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');

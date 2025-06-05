@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { sendMessage } from '../services/chatbotService';
 import './Chatbot.css';
-import { useApiKey } from '../contexts/ApiKeyContext';
 
 const Chatbot = () => {
-  const { apiKey } = useApiKey();
+  // Removed unused useApiKey hook
   const [messages, setMessages] = useState([
     {
       type: 'bot',
@@ -13,132 +13,131 @@ const Chatbot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('jwt_token');
-    if (!token) {
-      alert('로그인이 필요합니다.');
-      navigate('/signin');
-      return;
-    }
+    const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
       alert('API 키를 먼저 입력해주세요.');
       navigate('/settings');
       return;
     }
-  }, [navigate, apiKey]);
+  }, [navigate]);
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  const handleSend = async (e) => {
+  const handleSend = useCallback(async (e) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
-
-    const token = localStorage.getItem('jwt_token');
-    if (!token) {
-      alert('로그인이 필요합니다.');
-      navigate('/signin');
+    
+    // Get API key from localStorage or user object
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    let apiKey = localStorage.getItem('apiKey') || userData?.apiKey;
+    console.log('1', apiKey)
+    
+    console.log('Current API Key:', apiKey ? '***' + apiKey.slice(-4) : 'Not found');
+    
+    if (!apiKey) {
+      alert('API 키를 찾을 수 없습니다. 설정에서 API 키를 등록해주세요.1');
+      navigate('/settings');
       return;
     }
 
-    // 사용자 메시지 추가
-    const userMessage = { type: 'user', content: inputMessage };
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+    // Prevent multiple submissions
     setIsLoading(true);
-
+    
+    // Add user message to the UI immediately
+    const userMessage = { type: 'user', content: inputMessage };
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInputMessage('');
+    setError(null);
+    
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ message: inputMessage, history: messages })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 403) {
-          alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-          navigate('/signin');
-          return;
-        }
-        throw new Error(errorData.error || 'Network response was not ok');
-      }
-
-      const data = await response.json();
+      // Prepare chat history from the updated messages
+      const chatHistory = updatedMessages
+        .filter(msg => msg.type === 'user' || msg.type === 'bot')
+        .slice(-10)
+        .map(msg => ({
+          role: msg.type === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        }));
       
-      // 봇 응답 추가
-      const botMessage = { type: 'bot', content: data.response };
-      setMessages(prev => [...prev, botMessage]);
+      // Get user data from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('userData', userData)
+      const apiKey = localStorage.getItem('apiKey') || userData?.apiKey;
+      
+      if (!apiKey) {
+        throw new Error('API 키를 찾을 수 없습니다. 설정에서 API 키를 등록해주세요.2');
+      }
+      
+      console.log('Sending message with API key:', apiKey ? '***' + apiKey.slice(-4) : 'Not found');
+      
+      // Include the API key in the request
+      const response = await sendMessage(inputMessage, chatHistory, apiKey);
+      console.log('서버 응답:', response);
+      
+      const responseData = response?.data || response;
+      console.log('응답 데이터:', responseData);
+      
+      if (responseData) {
+        const botResponse = responseData.response || responseData.message || 
+                          (typeof responseData === 'string' ? responseData : '응답을 처리할 수 없습니다.');
+        
+        // Update messages using the functional update to ensure we have the latest state
+        setMessages(prev => {
+          // Filter out any existing bot responses for this message to prevent duplicates
+          const filtered = prev.filter((msg, idx) => 
+            idx < prev.length - 1 || msg.type !== 'bot');
+          return [...filtered, { type: 'bot', content: botResponse }];
+        });
+      }
     } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = { 
-        type: 'bot', 
-        content: error.message.includes('API 키') 
-          ? '죄송합니다. API 키 설정이 필요합니다. 설정 페이지로 이동합니다.' 
-          : '죄송합니다. 오류가 발생했습니다.' 
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      
-      if (error.message.includes('API 키')) {
-        setTimeout(() => navigate('/settings'), 2000);
-      }
+      console.error('Error sending message:', error);
+      setError(error.message || '메시지 전송 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputMessage, navigate, isLoading, messages]);
 
-  const handleQuickAction = async (action) => {
-    if (isLoading) return;
-    setInputMessage(action);
-    handleSend({ preventDefault: () => {} });
-  };
+  // Removed unused handleQuickAction function
+
+  const apiKey = localStorage.getItem('apiKey');
 
   return (
     <div className="chatbot-container">
       <div className="chatbot-header">
-        <button onClick={handleBack} className="back-button">←</button>
+        <button onClick={handleBack} className="back-button">
+          ← 뒤로 가기
+        </button>
         <h2>챗봇</h2>
-        <button className="refresh-button" onClick={() => window.location.reload()}>↻</button>
       </div>
-
-      <div className="messages-container">
+      <div className="chatbot-messages">
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.type}`}>
-            {message.type === 'bot' && (
-              <div className="bot-avatar">챗봇</div>
-            )}
-            <div className="message-content">
-              {message.content.split('\n').map((line, i) => (
-                <p key={i}>{line}</p>
-              ))}
-            </div>
+            {message.content}
           </div>
         ))}
         {isLoading && (
           <div className="message bot">
-            <div className="bot-avatar">챗봇</div>
-            <div className="message-content">
-              <p>입력 중...</p>
+            <div className="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
           </div>
         )}
+        {error && (
+          <div className="message error">
+            오류가 발생했습니다: {error}
+          </div>
+        )}
       </div>
-
-      <div className="quick-actions">
-        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문1</button>
-        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문2</button>
-        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문3</button>
-        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문4</button>
-        <button onClick={() => handleQuickAction("힌트 질문리스트")}>자주 묻는질문5</button>
-      </div>
-
-      <form onSubmit={handleSend} className="input-container">
+      <form onSubmit={handleSend} className="chatbot-input">
         <input
           type="text"
           value={inputMessage}
@@ -146,8 +145,8 @@ const Chatbot = () => {
           placeholder="궁금한 사항을 입력해 주세요"
           disabled={isLoading}
         />
-        <button type="submit" className="send-button" disabled={isLoading}>
-          <span className="send-icon">➤</span>
+        <button type="submit" disabled={isLoading || !apiKey} className="send-button">
+          {isLoading ? '처리 중...' : '전송'}
         </button>
       </form>
     </div>

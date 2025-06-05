@@ -7,30 +7,70 @@ import Chatbot from './components/Chatbot';
 import Settings from './components/Settings';
 import './App.css';
 import { ApiKeyProvider } from './contexts/ApiKeyContext';
+import ApiKeyDashboard from './pages/ApiKeyDashboard';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('jwt_token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // localStorage에 토큰이 있으면 로그인 상태로 유지
-    setIsLoggedIn(!!localStorage.getItem('jwt_token'));
+    // Check for token in localStorage and validate it
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+      if (token) {
+        try {
+          // Optional: Add token validation API call here if needed
+          setIsLoggedIn(true);
+        } catch (error) {
+          console.error('Token validation failed:', error);
+          handleLogout();
+        }
+      }
+      setIsInitialized(true);
+    };
+
+    checkAuth();
+
+    // Sync auth state across tabs
+    const handleStorageChange = (e) => {
+      if (e.key === 'token' || e.key === 'jwt_token') {
+        setIsLoggedIn(!!(e.newValue || localStorage.getItem('token') || localStorage.getItem('jwt_token')));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    // Clear all authentication-related data
+    localStorage.removeItem('token');
     localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user');
     localStorage.removeItem('user_email');
     localStorage.removeItem('username');
     localStorage.removeItem('openai_api_key');
-    // 필요하다면 navigate('/') 등으로 이동
+    
+    // Reset state
+    setIsLoggedIn(false);
+    
+    // Navigate to home after a short delay to ensure state is updated
+    setTimeout(() => window.location.href = '/', 0);
   };
 
   // 보호된 라우트 컴포넌트
   const ProtectedRoute = ({ children }) => {
-    if (!isLoggedIn) {
-      return <Navigate to="/signin" replace />;
+    // Show loading state while checking auth
+    if (!isInitialized) {
+      return <div>Loading...</div>; // Or a proper loading component
     }
+    
+    if (!isLoggedIn) {
+      // Redirect to signin and save the intended location
+      return <Navigate to={`/signin?redirect=${encodeURIComponent(window.location.pathname)}`} replace />;
+    }
+    
     return children;
   };
 
@@ -65,7 +105,7 @@ function App() {
             <nav className="cocogate-sidebar">
               <ul>
                 <li><a href="/chatbot" style={{color:'#6b7280',textDecoration:'none'}}><span role="img" aria-label="채팅">💬</span> 채팅</a></li>
-                <li><span role="img" aria-label="도구">🛠️</span> 도구</li>
+                <li><a href="/dashboard" style={{textDecoration:'none'}}><span role="img" aria-label="도구">🛠️</span> 대시</a></li>
                 {isLoggedIn && (
                   <li><a href="/settings" style={{color:'#3b82f6',textDecoration:'none'}}><span role="img" aria-label="설정">⚙️</span> 설정</a></li>
                 )}
@@ -96,6 +136,7 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route path="/dashboard" element={<ApiKeyDashboard />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>

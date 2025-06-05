@@ -14,29 +14,34 @@ function Register() {
     setError('');
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
-        credentials: 'include'
+        body: JSON.stringify({ username, email, password })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || '회원가입에 실패했습니다.');
       }
 
       const data = await response.json();
       
-      // 회원가입 성공 시 자동 로그인
-      localStorage.setItem('jwt_token', data.token);
-      localStorage.setItem('user_email', data.email);
-      localStorage.setItem('username', data.username);
-      
-      alert('회원가입이 완료되었습니다.');
-      navigate('/chatbot');
+      if (data.token) {
+        // Store the token in localStorage for subsequent requests
+        localStorage.setItem('token', data.token);
+        
+        // Store user data
+        if (data.email) localStorage.setItem('user_email', data.email);
+        if (data.username) localStorage.setItem('username', data.username);
+        
+        alert('회원가입 및 로그인이 완료되었습니다.');
+        navigate('/chatbot');
+      } else {
+        navigate('/login');
+      }
     } catch (error) {
       console.error('Registration error:', error);
       setError(error.message || '회원가입 중 오류가 발생했습니다.');
